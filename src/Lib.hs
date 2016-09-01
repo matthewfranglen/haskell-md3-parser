@@ -2,7 +2,7 @@ module Lib
     ( parse
     ) where
 
-data MD3 {
+data MD3 = MD3 {
       version :: Int
     , name :: String
     , flags :: Int
@@ -18,13 +18,13 @@ data MD3 {
     , surfaces :: [Surface]
     }
 
-data Frame {
+data Frame = Frame {
     }
 
-data Tag {
+data Tag = Tag {
     }
 
-data Surface {
+data Surface = Surface {
     }
 
 parse = undefined
