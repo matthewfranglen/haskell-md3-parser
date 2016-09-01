@@ -1,5 +1,5 @@
 module Lib
-    ( 
+    ( parse
     ) where
 
 data MD3 {
@@ -26,3 +26,5 @@ data Tag {
 
 data Surface {
     }
+
+parse = undefined
