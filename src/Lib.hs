@@ -4,7 +4,7 @@ import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.Lazy as L
 import Data.Bits ((.|.), shift)
 import Data.Char (chr)
-import Data.Int (Int16, Int64)
+import Data.Int (Int16, Int32, Int64)
 import Data.Word (Word8)
 
 data MD3 = MD3 {
@@ -57,15 +57,26 @@ takeFour xs = if length x' == 4
 toU8 :: Word8 -> Char
 toU8 = chr . fromIntegral
 
-takeU8 :: L.ByteString -> Maybe (Char, L.ByteString)
-takeU8 xs = f <$> takeOne xs
-    where f (x', xs') = (toU8 x', xs')
-
 toS16 :: (Word8, Word8) -> Int16
 toS16 (x, y) = (shift x' 8) .|. y'
     where x' = fromIntegral x :: Int16
           y' = fromIntegral y :: Int16
 
+toS32 :: (Word8, Word8, Word8, Word8) -> Int32
+toS32 (a, b, c, d) = (shift a' 24) .|. (shift b' 16) .|. (shift c' 8) .|. d'
+    where a' = fromIntegral a :: Int32
+          b' = fromIntegral b :: Int32
+          c' = fromIntegral c :: Int32
+          d' = fromIntegral d :: Int32
+
+takeU8 :: L.ByteString -> Maybe (Char, L.ByteString)
+takeU8 xs = f <$> takeOne xs
+    where f (x', xs') = (toU8 x', xs')
+
 takeS16 :: L.ByteString -> Maybe (Int16, L.ByteString)
 takeS16 xs = f <$> takeTwo xs
     where f (x, xs') = (toS16 x, xs')
+
+takeS32 :: L.ByteString -> Maybe (Int32, L.ByteString)
+takeS32 xs = f <$> takeFour xs
+    where f (x, xs') = (toS32 x, xs')
