@@ -1,8 +1,9 @@
 module Lib where
 
+import Control.Lens ((%~), _1, Cons)
 import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.ByteString.Lazy as L
-import Data.Bits ((.|.), shift)
+import Data.Bits ((.|.), shift, Bits)
 import Data.Char (chr)
 import Data.Int (Int16, Int32, Int64)
 import Data.Word (Word8)
@@ -37,46 +38,31 @@ data ParseState = ParseState {
     , offset :: Int64
     }
 
-takeOne :: L.ByteString -> Maybe (Word8, L.ByteString)
-takeOne = L.uncons
 
-takeTwo :: L.ByteString -> Maybe ((Word8, Word8), L.ByteString)
-takeTwo xs = if length x' == 2
-             then Just ((x' !! 0, x' !! 1), xs')
-             else Nothing
-    where (x, xs') = L.splitAt 2 xs
-          x'       = L.unpack x
-
-takeFour :: L.ByteString -> Maybe ((Word8, Word8, Word8, Word8), L.ByteString)
-takeFour xs = if length x' == 4
-             then Just ((x' !! 0, x' !! 1, x' !! 2, x' !! 3), xs')
-             else Nothing
-    where (x, xs') = L.splitAt 4 xs
-          x'       = L.unpack x
+takeU8 :: L.ByteString -> Maybe (Char, L.ByteString)
+takeU8 xs = (_1 %~ toU8) <$> L.uncons xs
 
 toU8 :: Word8 -> Char
 toU8 = chr . fromIntegral
 
-toS16 :: (Word8, Word8) -> Int16
-toS16 (x, y) = (shift x' 8) .|. y'
-    where x' = fromIntegral x :: Int16
-          y' = fromIntegral y :: Int16
-
-toS32 :: (Word8, Word8, Word8, Word8) -> Int32
-toS32 (a, b, c, d) = (shift a' 24) .|. (shift b' 16) .|. (shift c' 8) .|. d'
-    where a' = fromIntegral a :: Int32
-          b' = fromIntegral b :: Int32
-          c' = fromIntegral c :: Int32
-          d' = fromIntegral d :: Int32
-
-takeU8 :: L.ByteString -> Maybe (Char, L.ByteString)
-takeU8 xs = f <$> takeOne xs
-    where f (x', xs') = (toU8 x', xs')
 
 takeS16 :: L.ByteString -> Maybe (Int16, L.ByteString)
-takeS16 xs = f <$> takeTwo xs
-    where f (x, xs') = (toS16 x, xs')
+takeS16 xs = Just (0, xs) >>= f >>= f
+    where f :: (Int16, L.ByteString) -> Maybe (Int16, L.ByteString)
+          f = uncurry appendConsumedBytes
 
 takeS32 :: L.ByteString -> Maybe (Int32, L.ByteString)
-takeS32 xs = f <$> takeFour xs
-    where f (x, xs') = (toS32 x, xs')
+takeS32 xs = Just (0, xs) >>= f >>= f >>= f >>= f
+    where f :: (Int32, L.ByteString) -> Maybe (Int32, L.ByteString)
+          f = uncurry appendConsumedBytes
+
+appendBytes :: Integral a => Integral b => Bits b => b -> a -> b
+appendBytes a b = (shift a 8) .|. fromIntegral b
+
+-- Using _1 without importing it from Control.Lens will cause you to get errors about type holes. They are misleading!
+
+consumeBytes :: (Word8 -> a) -> L.ByteString -> Maybe (a, L.ByteString)
+consumeBytes f xs = (_1 %~ f) <$> L.uncons xs
+
+appendConsumedBytes :: Integral a => Bits a => a -> L.ByteString -> Maybe (a, L.ByteString)
+appendConsumedBytes v xs = consumeBytes (appendBytes v) xs
