@@ -50,7 +50,7 @@ data ParseState = ParseState {
     where g' = g . fst
 
 
-takeIntegral :: Integral a => Bits a => L.ByteString -> Maybe (a, L.ByteString)
+takeIntegral :: Integral a => L.ByteString -> Maybe (a, L.ByteString)
 takeIntegral bs = (_1 %~ fromIntegral) <$> L.uncons bs
 
 takeU8 :: L.ByteString -> Maybe (Char, L.ByteString)
