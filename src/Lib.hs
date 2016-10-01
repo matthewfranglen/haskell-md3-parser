@@ -9,6 +9,13 @@ import Data.Int (Int16, Int32, Int64)
 import Data.Word (Word8)
 
 data MD3 = MD3 {
+      header :: Header
+    , frames :: [Frame]
+    , tags :: [Tag]
+    , surfaces :: [Surface]
+    }
+
+data Header = Header {
       version :: Int
     , name :: String
     , flags :: Int
@@ -19,10 +26,7 @@ data MD3 = MD3 {
     , frameOffset :: Int
     , surfaceOffset :: Int
     , size :: Int
-    , frames :: [Frame]
-    , tags :: [Tag]
-    , surfaces :: [Surface]
-    }
+}
 
 data Frame = Frame {
     }
@@ -37,6 +41,9 @@ data ParseState = ParseState {
       content :: L.ByteString
     , offset :: Int64
     }
+
+(==>) :: Monad m => (L.ByteString -> m (a, L.ByteString)) -> (a -> L.ByteString -> m (b, L.ByteString)) -> (L.ByteString -> m (b, L.ByteString))
+(==>) f g bs = f bs >>= uncurry g
 
 
 takeU8 :: L.ByteString -> Maybe (Char, L.ByteString)
