@@ -45,6 +45,10 @@ data ParseState = ParseState {
 (==>) :: Monad m => (L.ByteString -> m (a, L.ByteString)) -> (a -> L.ByteString -> m (b, L.ByteString)) -> (L.ByteString -> m (b, L.ByteString))
 (==>) f g bs = f bs >>= uncurry g
 
+(=>>) :: Monad m => (L.ByteString -> m (a, L.ByteString)) -> (a -> b) -> (L.ByteString -> m b)
+(=>>) f g bs = g' <$> f bs
+    where g' = g . fst
+
 
 takeU8 :: L.ByteString -> Maybe (Char, L.ByteString)
 takeU8 xs = (_1 %~ toU8) <$> L.uncons xs
