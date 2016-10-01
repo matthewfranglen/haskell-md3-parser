@@ -75,3 +75,8 @@ takeS32 = takeIntegral ==>
     \c -> takeIntegralAs $ toS32 a b c
     where toS32 :: Int32 -> Int32 -> Int32 -> Int32 -> Int32
           toS32 a b c d = (shift a 24) .|. (shift b 16) .|. (shift c 8) .|. d
+
+takeMany :: Integral a => a -> (L.ByteString -> Maybe (b, L.ByteString)) -> L.ByteString -> Maybe ([b], L.ByteString)
+takeMany n f bs | n <= 0    = Just ([], bs)
+                | n == 1    = (_1 %~ (:[])) <$> f bs
+                | otherwise = f bs >>= \(a, bs') -> (_1 %~ (a :)) <$> takeMany (n - 1) f bs'
