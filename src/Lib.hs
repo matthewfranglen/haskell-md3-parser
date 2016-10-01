@@ -81,7 +81,6 @@ takeMany n f bs | n <= 0    = Just ([], bs)
                 | n == 1    = (_1 %~ (:[])) <$> f bs
                 | otherwise = f bs >>= \(a, bs') -> (_1 %~ (a :)) <$> takeMany (n - 1) f bs'
 
-
 -- takeMD3Header :: L.ByteString -> Maybe Header
 -- takeMD3Header = takeS32 ==>
 --     \ident -> takeS32 ==>
@@ -108,3 +107,11 @@ takeMany n f bs | n <= 0    = Just ([], bs)
 --     , surfaceOffset = surfaceOffset
 --     , size = size
 --     }
+
+example :: L.ByteString -> Maybe (Int32, L.ByteString)
+example = takeS32
+
+example' :: L.ByteString -> Maybe (Int32, Int32)
+example' = takeS32 ==> \a -> (takeS32 =>> f a)
+    where f :: Int32 -> Int32 -> Int32
+          f a b = (a, b)
