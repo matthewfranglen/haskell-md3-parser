@@ -16,16 +16,16 @@ data MD3 = MD3 {
     }
 
 data Header = Header {
-      version :: Int
-    , name :: String
-    , flags :: Int
-    , frameCount :: Int
-    , tagCount :: Int
-    , surfaceCount :: Int
-    , skinCount :: Int
-    , frameOffset :: Int
-    , surfaceOffset :: Int
-    , size :: Int
+      version       :: Int32
+    , name          :: String
+    , flags         :: Int32
+    , frameCount    :: Int32
+    , tagCount      :: Int32
+    , surfaceCount  :: Int32
+    , skinCount     :: Int32
+    , frameOffset   :: Int32
+    , surfaceOffset :: Int32
+    , size          :: Int32
 }
 
 data Frame = Frame {
@@ -80,3 +80,31 @@ takeMany :: Integral a => a -> (L.ByteString -> Maybe (b, L.ByteString)) -> L.By
 takeMany n f bs | n <= 0    = Just ([], bs)
                 | n == 1    = (_1 %~ (:[])) <$> f bs
                 | otherwise = f bs >>= \(a, bs') -> (_1 %~ (a :)) <$> takeMany (n - 1) f bs'
+
+
+-- takeMD3Header :: L.ByteString -> Maybe Header
+-- takeMD3Header = takeS32 ==>
+--     \ident -> takeS32 ==>
+--     \version -> takeMany 64 takeU8 ==>
+--     \name -> takeS32 ==>
+--     \flags -> takeS32 ==>
+--     \frameCount -> takeS32 ==>
+--     \tagCount -> takeS32 ==>
+--     \surfaceCount -> takeS32 ==>
+--     \skinCount -> takeS32 ==>
+--     \frameOffset -> takeS32 ==>
+--     \tagOffset -> takeS32 ==>
+--     \surfaceOffset -> takeS32 ==>
+--     \skinOffset -> takeS32 =>>
+--     \size -> Header {
+--       version = version
+--     , name = name
+--     , flags = flags
+--     , frameCount = frameCount
+--     , tagCount = tagCount
+--     , surfaceCount = surfaceCount
+--     , skinCount = skinCount
+--     , frameOffset = frameOffset
+--     , surfaceOffset = surfaceOffset
+--     , size = size
+--     }
