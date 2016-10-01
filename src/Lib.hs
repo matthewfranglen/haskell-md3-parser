@@ -60,9 +60,9 @@ takeU8 :: L.ByteString -> Maybe (Char, L.ByteString)
 takeU8 bs = (_1 %~ chr) <$> takeIntegral bs
 
 takeS16 :: L.ByteString -> Maybe (Int16, L.ByteString)
-takeS16 = takeIntegral ==> \a -> takeIntegral ==> \b -> return . (,) (toS16 a b)
-    where toS16 :: Int16 -> Int16 -> Int16
-          toS16 a b = (shift a 8) .|. b
+takeS16 = takeIntegral ==> \a -> takeAs $ toS16 a
+    where toS16 :: Int16 -> Word8 -> Int16
+          toS16 a b = (shift a 8) .|. (fromIntegral b)
 
 
 takeS32 :: L.ByteString -> Maybe (Int32, L.ByteString)
