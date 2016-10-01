@@ -42,8 +42,8 @@ data ParseState = ParseState {
     , offset :: Int64
     }
 
-(==>) :: Monad m => (L.ByteString -> m (a, L.ByteString)) -> (a -> L.ByteString -> m (b, L.ByteString)) -> (L.ByteString -> m (b, L.ByteString))
-(==>) f g bs = f bs >>= uncurry g
+(==>) :: Monad m => m (a, b) -> (b -> m (c, b)) -> m (c, b)
+(==>) x f = snd <$> x >>= f
 
 (=>>) :: Monad m => (L.ByteString -> m (a, L.ByteString)) -> (a -> b) -> (L.ByteString -> m b)
 (=>>) f g bs = g' <$> f bs
@@ -107,11 +107,3 @@ takeMany n f bs | n <= 0    = Just ([], bs)
 --     , surfaceOffset = surfaceOffset
 --     , size = size
 --     }
-
-example :: L.ByteString -> Maybe (Int32, L.ByteString)
-example = takeS32
-
-example' :: L.ByteString -> Maybe (Int32, Int32)
-example' = takeS32 ==> \a -> (takeS32 =>> f a)
-    where f :: Int32 -> Int32 -> Int32
-          f a b = (a, b)
