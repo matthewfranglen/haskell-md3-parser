@@ -49,22 +49,17 @@ data ParseState = ParseState {
 (=>>) f g bs = g' <$> f bs
     where g' = g . fst
 
-identity :: Monad m => L.ByteString -> m (a, L.ByteString)
-identity bs = return (undefined, bs)
 
+takeIntegral :: Integral a => Bits a => L.ByteString -> Maybe (a, L.ByteString)
+takeIntegral bs = (_1 %~ fromIntegral) <$> L.uncons bs
 
 takeU8 :: L.ByteString -> Maybe (Char, L.ByteString)
-takeU8 xs = (_1 %~ toU8) <$> L.uncons xs
-    where toU8 :: Word8 -> Char
-          toU8 = chr . fromIntegral
+takeU8 bs = (_1 %~ chr) <$> takeIntegral bs
 
 takeS16 :: L.ByteString -> Maybe (Int16, L.ByteString)
-takeS16 = take ==> \a -> take ==> toS16 a
-    where take :: L.ByteString -> Maybe (Int16, L.ByteString)
-          take bs = (_1 %~ fromIntegral) <$> L.uncons bs
-          toS16 :: Int16 -> Int16 -> L.ByteString -> Maybe (Int16, L.ByteString)
-          toS16 a b bs = return (i, bs)
-            where i = (shift a 8) .|. b
+takeS16 = takeIntegral ==> \a -> takeIntegral ==> \b -> return . (,) (toS16 a b)
+    where toS16 :: Int16 -> Int16 -> Int16
+          toS16 a b = (shift a 8) .|. b
 
 
 takeS32 :: L.ByteString -> Maybe (Int32, L.ByteString)
