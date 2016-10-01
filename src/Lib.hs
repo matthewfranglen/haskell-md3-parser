@@ -49,6 +49,7 @@ data ParseState = ParseState {
 (=>>) f g bs = g' <$> f bs
     where g' = g . fst
 
+-- Using _1 without importing it from Control.Lens will cause you to get errors about type holes. They are misleading!
 
 takeAs :: (Word8 -> a) -> L.ByteString -> Maybe (a, L.ByteString)
 takeAs f bs = (_1 %~ f) <$> L.uncons bs
@@ -64,19 +65,10 @@ takeS16 = takeIntegral ==> \a -> takeAs $ toS16 a
     where toS16 :: Int16 -> Word8 -> Int16
           toS16 a b = (shift a 8) .|. (fromIntegral b)
 
-
 takeS32 :: L.ByteString -> Maybe (Int32, L.ByteString)
-takeS32 xs = Just (0, xs) >>= f >>= f >>= f >>= f
-    where f :: (Int32, L.ByteString) -> Maybe (Int32, L.ByteString)
-          f = uncurry appendConsumedBytes
-
-appendBytes :: Integral a => Integral b => Bits b => b -> a -> b
-appendBytes a b = (shift a 8) .|. fromIntegral b
-
--- Using _1 without importing it from Control.Lens will cause you to get errors about type holes. They are misleading!
-
-consumeBytes :: (Word8 -> a) -> L.ByteString -> Maybe (a, L.ByteString)
-consumeBytes f xs = (_1 %~ f) <$> L.uncons xs
-
-appendConsumedBytes :: Integral a => Bits a => a -> L.ByteString -> Maybe (a, L.ByteString)
-appendConsumedBytes v xs = consumeBytes (appendBytes v) xs
+takeS32 = takeIntegral ==>
+    \a -> takeIntegral ==>
+    \b -> takeIntegral ==>
+    \c -> takeAs $ toS32 a b c
+    where toS32 :: Int32 -> Int32 -> Int32 -> Word8 -> Int32
+          toS32 a b c d = (shift a 24) .|. (shift b 16) .|. (shift c 8) .|. (fromIntegral d)
