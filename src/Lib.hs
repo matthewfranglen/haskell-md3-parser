@@ -57,18 +57,21 @@ takeAs f bs = (_1 %~ f) <$> L.uncons bs
 takeIntegral :: Integral a => L.ByteString -> Maybe (a, L.ByteString)
 takeIntegral = takeAs fromIntegral
 
+takeIntegralAs :: Integral a => (a -> b) -> L.ByteString -> Maybe (b, L.ByteString)
+takeIntegralAs f bs = (_1 %~ f . fromIntegral) <$> L.uncons bs
+
 takeU8 :: L.ByteString -> Maybe (Char, L.ByteString)
-takeU8 bs = (_1 %~ chr) <$> takeIntegral bs
+takeU8 = takeIntegralAs chr
 
 takeS16 :: L.ByteString -> Maybe (Int16, L.ByteString)
-takeS16 = takeIntegral ==> \a -> takeAs $ toS16 a
-    where toS16 :: Int16 -> Word8 -> Int16
-          toS16 a b = (shift a 8) .|. (fromIntegral b)
+takeS16 = takeIntegral ==> \a -> takeIntegralAs $ toS16 a
+    where toS16 :: Int16 -> Int16 -> Int16
+          toS16 a b = (shift a 8) .|. b
 
 takeS32 :: L.ByteString -> Maybe (Int32, L.ByteString)
 takeS32 = takeIntegral ==>
     \a -> takeIntegral ==>
     \b -> takeIntegral ==>
-    \c -> takeAs $ toS32 a b c
-    where toS32 :: Int32 -> Int32 -> Int32 -> Word8 -> Int32
-          toS32 a b c d = (shift a 24) .|. (shift b 16) .|. (shift c 8) .|. (fromIntegral d)
+    \c -> takeIntegralAs $ toS32 a b c
+    where toS32 :: Int32 -> Int32 -> Int32 -> Int32 -> Int32
+          toS32 a b c d = (shift a 24) .|. (shift b 16) .|. (shift c 8) .|. d
