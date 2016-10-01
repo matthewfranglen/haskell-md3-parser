@@ -58,11 +58,14 @@ takeU8 xs = (_1 %~ toU8) <$> L.uncons xs
     where toU8 :: Word8 -> Char
           toU8 = chr . fromIntegral
 
-
 takeS16 :: L.ByteString -> Maybe (Int16, L.ByteString)
-takeS16 xs = Just (0, xs) >>= f >>= f
-    where f :: (Int16, L.ByteString) -> Maybe (Int16, L.ByteString)
-          f = uncurry appendConsumedBytes
+takeS16 = take ==> \a -> take ==> toS16 a
+    where take :: L.ByteString -> Maybe (Int16, L.ByteString)
+          take bs = (_1 %~ fromIntegral) <$> L.uncons bs
+          toS16 :: Int16 -> Int16 -> L.ByteString -> Maybe (Int16, L.ByteString)
+          toS16 a b bs = return (i, bs)
+            where i = (shift a 8) .|. b
+
 
 takeS32 :: L.ByteString -> Maybe (Int32, L.ByteString)
 takeS32 xs = Just (0, xs) >>= f >>= f >>= f >>= f
