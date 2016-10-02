@@ -39,10 +39,18 @@ data Surface = Surface {
 
 data ParseState = ParseState {
       content :: L.ByteString
-    , offset :: Int64
     }
+newtype Parse a = Parse {
+      runParse :: ParseState -> Maybe (a, ParseState)
+    }
+instance Functor Parse where
+    fmap f parser = parser ==> \result ->
+                    identity (f result)
 
-(==>) :: Monad m => m (a, b) -> (b -> m (c, b)) -> m (c, b)
+identity :: a -> Parse a
+identity a = Parse (\s -> Right (a, s))
+
+(==>) :: Parse a -> (a -> Parse b) -> Parse b
 (==>) x f = snd <$> x >>= f
 
 (=>>) :: Monad m => (L.ByteString -> m (a, L.ByteString)) -> (a -> b) -> (L.ByteString -> m b)
